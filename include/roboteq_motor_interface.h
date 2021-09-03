@@ -6,6 +6,7 @@
 
 #include "roboteq_api/src/RoboteqDevice.h"
 #include "roboteq_api/src/ErrorCodes.h"
+#include "skid_steer_kinematics.h"
 
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
@@ -13,21 +14,9 @@
 #include <nav_msgs/Odometry.h>
 
 #include <string>
-#include <chrono>
 
 namespace dragoon
 {
-class DragoonKinematicsModel final
-{
-public:
-  struct MotorVelocity
-  {
-    double left_motor_rpm;
-    double right_motor_rpm;
-  };
-
-private:
-};
 
 class RoboteqMotorInterface final
 {
@@ -39,6 +28,7 @@ public:
 
 private:
   RoboteqDevice roboteq_dev_;
+  SkidSteerKinematics dragoon_kinematics_;
   int motor_max_rpm;
   int rpm_to_vel_;
 
@@ -46,8 +36,9 @@ private:
   std::string port_;
   double cmd_vel_timeout_limit_;
   double timer_freq_;
-  double slip_factor_;
-  double wheel_diameter_;
+  double wheel_base_;
+  double slip_ratio_;
+  double wheel_radius_;
   double vehicle_width_;
 
   // Health-related: if this exceeds a threshold, this node will send stop command to motor

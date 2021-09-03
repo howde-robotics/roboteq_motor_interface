@@ -26,14 +26,14 @@ include_directories(
   third_party
 )
 
-# add_library(roboteq_api third_party/roboteq_api/src/RoboteqDevice.cpp)
+add_library(skid_steer_kinematics src/skid_steer_kinematics.cpp)
 
 add_executable(roboteq_motor_interface 
   src/roboteq_motor_interface.cpp
-  # third_party/roboteq_api/src/RoboteqDevice.cpp
   third_party/roboteq_api/RoboteqDevice.o
 )
 
 target_link_libraries(roboteq_motor_interface
+  skid_steer_kinematics
   ${catkin_LIBRARIES}
 )
