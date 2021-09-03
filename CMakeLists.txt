@@ -22,6 +22,7 @@ catkin_package(CATKIN_DEPENDS
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${GTEST_INCLUDE_DIRS}
   include
   third_party
 )
@@ -37,3 +38,8 @@ target_link_libraries(roboteq_motor_interface
   skid_steer_kinematics
   ${catkin_LIBRARIES}
 )
+
+catkin_add_gtest(${PROJECT_NAME}-test tests/unit_tests.cpp)
+if (TARGET ${PROJECT_NAME}-test)
+  target_link_libraries(${PROJECT_NAME}-test skid_steer_kinematics)
+endif()

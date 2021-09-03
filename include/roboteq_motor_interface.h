@@ -14,6 +14,7 @@
 #include <nav_msgs/Odometry.h>
 
 #include <string>
+#include <algorithm>
 
 namespace dragoon
 {
@@ -29,7 +30,7 @@ public:
 private:
   RoboteqDevice roboteq_dev_;
   SkidSteerKinematics dragoon_kinematics_;
-  int motor_max_rpm;
+  int motor_max_rpm_;
   int rpm_to_vel_;
 
   // ROS params

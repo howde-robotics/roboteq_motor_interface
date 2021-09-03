@@ -7,8 +7,7 @@
 
 namespace dragoon
 {
-SkidSteerKinematics::SkidSteerKinematics(double wheel_base, double vehicle_width, double wheel_radius,
-                                         double slip_ratio)
+SkidSteerKinematics::SkidSteerKinematics(double wheel_base, double vehicle_width, double wheel_radius, double slip_ratio)
   : vehicle_width_(vehicle_width), wheel_radius_(wheel_radius), slip_ratio_(slip_ratio), wheel_base_(wheel_base)
 {
 }
