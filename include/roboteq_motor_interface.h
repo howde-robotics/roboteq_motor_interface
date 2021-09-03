@@ -50,7 +50,6 @@ private:
   static constexpr int kDragoonLeftMotor = 1;
   static constexpr int kDragoonRightMotor = 2;
   // Maybe unused
-  static constexpr int kMinCommand = -1000;
   static constexpr int kMaxCommand = 1000;
   static constexpr int kMaxRpm = 122;
   static constexpr int kConfigMaxRpmCh = 54;

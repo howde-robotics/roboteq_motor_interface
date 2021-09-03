@@ -36,7 +36,7 @@ void RoboteqMotorInterface::run()
 
   if (!this->CheckCmdVelAge())
   {
-    ROS_ERROR("Cmd Vel to Roboteq Interface is too old t=%f, stopping motors", time_since_cmd_vel_.toSec());
+    ROS_WARN("Cmd Vel to Roboteq Interface is too old t=%.2fs, stopping motors", time_since_cmd_vel_.toSec());
     stopMotors();
     return;
   }
@@ -85,7 +85,7 @@ void RoboteqMotorInterface::run()
 
 [[nodiscard]] bool RoboteqMotorInterface::CheckCmdVelAge() {
   time_since_cmd_vel_ = ros::Time::now() - last_cmd_vel_time_;
-  return time_since_cmd_vel_.toSec() > cmd_vel_timeout_limit_;
+  return time_since_cmd_vel_.toSec() < cmd_vel_timeout_limit_;
 }
 
     [[nodiscard]] bool RoboteqMotorInterface::sendCmdVelToMotors()
@@ -109,6 +109,8 @@ void RoboteqMotorInterface::run()
     ROS_WARN("Failed to send cmd to Roboteq Right Motor.");
     return false;
   }
+
+  ROS_INFO("Roboteq Motor Interface: sending cmd to left: %d rpm, right: %d rpm", left_rpm_cmd, right_rpm_cmd);
   return true;
 }
 
@@ -153,12 +155,12 @@ RoboteqMotorInterface::~RoboteqMotorInterface()
 void RoboteqMotorInterface::initRos()
 {
   private_nh_.param<string>("port_", port_, std::string("/dev/roboteq"));
-  private_nh_.param<double>("cmd_vel_timeout_limit_", cmd_vel_timeout_limit_, 0.05);  // secs
-  private_nh_.param<double>("timer_freq_", timer_freq_, 50.0);                        // Hz
-  private_nh_.param<double>("slip_ratio_", slip_ratio_, 0.1);                         // ratio
-  private_nh_.param<double>("wheel_base_", wheel_base_, 0.8);                         // m
-  private_nh_.param<double>("wheel_radius_", wheel_radius_, 0.1);                     // m
-  private_nh_.param<double>("vehicle_width_", vehicle_width_, 0.2);                   // m
+  private_nh_.param<double>("cmd_vel_timeout_limit_", cmd_vel_timeout_limit_, 0.2);  // secs
+  private_nh_.param<double>("timer_freq_", timer_freq_, 50.0);                       // Hz
+  private_nh_.param<double>("slip_ratio_", slip_ratio_, 0.1);                        // ratio
+  private_nh_.param<double>("wheel_base_", wheel_base_, 0.45);                       // m
+  private_nh_.param<double>("wheel_radius_", wheel_radius_, 0.07);                   // m
+  private_nh_.param<double>("vehicle_width_", vehicle_width_, 0.25);                 // m
 
   cmd_vel_sub_ = nh_.subscribe("cmd_vel", 1, &RoboteqMotorInterface::cmdVelCallback, this);
 

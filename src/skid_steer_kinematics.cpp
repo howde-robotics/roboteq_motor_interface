@@ -37,8 +37,8 @@ SkidSteerKinematics::BodyVelocities SkidSteerKinematics::calcBodyVelFromWheelVel
 SkidSteerKinematics::WheelVelocities SkidSteerKinematics::calcWheelVelFromBodyVel(const BodyVelocities& body_vel) const
 {
   WheelVelocities out;
-  out.left_wheel_vel_x = (body_vel.linear_x - body_vel.angular_z * wheel_base_ / 2.0) / wheel_radius_;
-  out.right_wheel_vel_x = (body_vel.linear_x + body_vel.angular_z * wheel_base_ / 2.0) / wheel_radius_;
+  out.left_wheel_vel_x = body_vel.linear_x - body_vel.angular_z * vehicle_width_ / 2.0;
+  out.right_wheel_vel_x = body_vel.linear_x + body_vel.angular_z * vehicle_width_ / 2.0;
   return out;
 }
 
