@@ -12,12 +12,6 @@ RoboteqMotorInterface::RoboteqMotorInterface() : private_nh_("~")
   this->initRoboteq();
   this->initRos();
 
-  if (roboteq_dev_.GetConfig(kConfigMaxRpmCh, motor_max_rpm) != RQ_SUCCESS)
-  {
-    ROS_ERROR("Failed to get max RPM from Roboteq Device. Shutting Down.");
-    ros::shutdown();
-  }
-
   dragoon_kinematics_.setWheelBase(wheel_base_);
   dragoon_kinematics_.setVehicleWidth(vehicle_width_);
   dragoon_kinematics_.setWheelRadius(wheel_radius_);
@@ -75,8 +69,8 @@ void RoboteqMotorInterface::run()
   }
 
   SkidSteerKinematics::MotorVelocities motor_vel;
-  motor_vel.left_motor_rpm = enc_rpm_rel_left / kMaxCommand * kMaxRpm;
-  motor_vel.right_motor_rpm = enc_rpm_rel_right / kMaxCommand * kMaxRpm;
+  motor_vel.left_motor_rpm = enc_rpm_rel_left / kMaxCommand * motor_max_rpm_;
+  motor_vel.right_motor_rpm = enc_rpm_rel_right / kMaxCommand * motor_max_rpm_;
   SkidSteerKinematics::BodyVelocities body_vel;
   body_vel = dragoon_kinematics_.calcBodyVelFromMotorVel(motor_vel);
 
@@ -94,7 +88,7 @@ void RoboteqMotorInterface::run()
   return time_since_cmd_vel_.toSec() > cmd_vel_timeout_limit_;
 }
 
-[[nodiscard]] bool RoboteqMotorInterface::sendCmdVelToMotors()
+    [[nodiscard]] bool RoboteqMotorInterface::sendCmdVelToMotors()
 {
   SkidSteerKinematics::BodyVelocities body_vel;
   body_vel.linear_x = curr_cmd_vel_.linear.x;
@@ -138,10 +132,15 @@ void RoboteqMotorInterface::stopMotors()
 
 void RoboteqMotorInterface::initRoboteq()
 {
-  const int status = roboteq_dev_.Connect(port_);
-  if (status != RQ_SUCCESS)
+  if (roboteq_dev_.Connect(port_) != RQ_SUCCESS)
   {
     ROS_ERROR("Failed to connect to Roboteq Device. Shutting Down.");
+    ros::shutdown();
+  }
+
+  if (roboteq_dev_.GetConfig(kConfigMaxRpmCh, motor_max_rpm_) != RQ_SUCCESS)
+  {
+    ROS_ERROR("Failed to get max RPM from Roboteq Device. Shutting Down.");
     ros::shutdown();
   }
 }
@@ -155,7 +154,7 @@ void RoboteqMotorInterface::initRos()
 {
   private_nh_.param<string>("port_", port_, std::string("/dev/roboteq"));
   private_nh_.param<double>("cmd_vel_timeout_limit_", cmd_vel_timeout_limit_, 0.05);  // secs
-  private_nh_.param<double>("timetimer_freq_rFreq_", timer_freq_, 50.0);              // Hz
+  private_nh_.param<double>("timer_freq_", timer_freq_, 50.0);                        // Hz
   private_nh_.param<double>("slip_ratio_", slip_ratio_, 0.1);                         // ratio
   private_nh_.param<double>("wheel_base_", wheel_base_, 0.8);                         // m
   private_nh_.param<double>("wheel_radius_", wheel_radius_, 0.1);                     // m
