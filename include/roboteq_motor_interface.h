@@ -8,6 +8,7 @@
 #include "roboteq_api/src/ErrorCodes.h"
 
 #include <ros/ros.h>
+#include <std_msgs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
 
@@ -32,6 +33,7 @@ class RoboteqMotorInterface final
 {
 public:
   RoboteqMotorInterface();
+  ~RoboteqMotorInterface();
 
   void run();
 
@@ -42,7 +44,7 @@ private:
 
   // ROS params
   std::string port_;
-  double health_timeout_limit_;
+  double cmd_vel_timeout_limit_;
   double timer_freq_;
   double slip_factor_;
   double wheel_diameter_;
@@ -63,13 +65,16 @@ private:
   static constexpr int kSetRpmCh = 3;
   static constexpr int kGetRpmCh = 7;
 
+  [[nodiscard]] bool sendCmdVelToMotors();
+  [[nodiscard]] bool CheckCmdVelAge();
   void stopMotors();
-  void readAndPubEncoders();
+  [[nodiscard]] bool readEncodersAndPubOdom();
 
   // ROS stuff
   ros::NodeHandle nh_, private_nh_;
   ros::Subscriber cmd_vel_sub_;
   ros::Publisher odom_pub_;
+  ros::Publisher heartbeat_pub_;
   ros::Timer timer_;
   geometry_msgs::Twist curr_cmd_vel_;
 
