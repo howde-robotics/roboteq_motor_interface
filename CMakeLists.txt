@@ -31,7 +31,8 @@ add_library(skid_steer_kinematics src/skid_steer_kinematics.cpp)
 
 add_executable(roboteq_motor_interface 
   src/roboteq_motor_interface.cpp
-  third_party/roboteq_api/RoboteqDevice.o
+  third_party/roboteq_api/RoboteqDeviceARM64.o
+  #third_party/roboteq_api/RoboteqDeviceX86.o
 )
 
 target_link_libraries(roboteq_motor_interface
@@ -43,3 +44,4 @@ catkin_add_gtest(${PROJECT_NAME}-test tests/unit_tests.cpp)
 if (TARGET ${PROJECT_NAME}-test)
   target_link_libraries(${PROJECT_NAME}-test skid_steer_kinematics)
 endif()
+

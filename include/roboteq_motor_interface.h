@@ -47,8 +47,8 @@ private:
   ros::Time last_cmd_vel_time_;
 
   // Static constants
-  static constexpr int kDragoonLeftMotor = 1;
-  static constexpr int kDragoonRightMotor = 2;
+  static constexpr int kDragoonLeftMotor = 2;
+  static constexpr int kDragoonRightMotor = 1;
   // Maybe unused
   static constexpr int kMaxCommand = 1000;
   static constexpr int kMaxRpm = 122;

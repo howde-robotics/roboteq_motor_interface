@@ -9,8 +9,8 @@ namespace dragoon
 {
 RoboteqMotorInterface::RoboteqMotorInterface() : private_nh_("~")
 {
-  this->initRoboteq();
   this->initRos();
+  this->initRoboteq();
 
   dragoon_kinematics_.setWheelBase(wheel_base_);
   dragoon_kinematics_.setVehicleWidth(vehicle_width_);
@@ -67,10 +67,12 @@ void RoboteqMotorInterface::run()
     ROS_WARN("Failed to get motor RPM from Right Motor.");
     return false;
   }
+  
+  ROS_INFO("left enc: %d right enc: %d", enc_rpm_rel_left, enc_rpm_rel_right);
 
   SkidSteerKinematics::MotorVelocities motor_vel;
-  motor_vel.left_motor_rpm = enc_rpm_rel_left / kMaxCommand * motor_max_rpm_;
-  motor_vel.right_motor_rpm = enc_rpm_rel_right / kMaxCommand * motor_max_rpm_;
+  motor_vel.left_motor_rpm = enc_rpm_rel_left * kMaxRpm / kMaxCommand;
+  motor_vel.right_motor_rpm = enc_rpm_rel_right * kMaxRpm / kMaxCommand;
   SkidSteerKinematics::BodyVelocities body_vel;
   body_vel = dragoon_kinematics_.calcBodyVelFromMotorVel(motor_vel);
 
@@ -104,7 +106,7 @@ void RoboteqMotorInterface::run()
     ROS_WARN("Failed to send cmd to Roboteq Left Motor.");
     return false;
   }
-  if (roboteq_dev_.SetCommand(kSetRpmCh, kDragoonLeftMotor, right_rpm_cmd) != RQ_SUCCESS)
+  if (roboteq_dev_.SetCommand(kSetRpmCh, kDragoonRightMotor, right_rpm_cmd) != RQ_SUCCESS)
   {
     ROS_WARN("Failed to send cmd to Roboteq Right Motor.");
     return false;
@@ -116,6 +118,7 @@ void RoboteqMotorInterface::run()
 
 void RoboteqMotorInterface::stopMotors()
 {
+  ros::Duration(0.01).sleep();
   if (roboteq_dev_.SetCommand(kSetRpmCh, kDragoonLeftMotor, 0) != RQ_SUCCESS)
   {
     ROS_ERROR("Failed to stop Roboteq Left Motor. Disconnecting.");
@@ -123,6 +126,7 @@ void RoboteqMotorInterface::stopMotors()
     ros::shutdown();
     return;
   }
+  ros::Duration(0.01).sleep();
   if (roboteq_dev_.SetCommand(kSetRpmCh, kDragoonRightMotor, 0) != RQ_SUCCESS)
   {
     ROS_ERROR("Failed to stop Roboteq Right Motor. Disconnecting.");
@@ -139,16 +143,29 @@ void RoboteqMotorInterface::initRoboteq()
     ROS_ERROR("Failed to connect to Roboteq Device. Shutting Down.");
     ros::shutdown();
   }
+  
+  if (roboteq_dev_.SetConfig(kConfigMaxRpmCh, kDragoonLeftMotor, kMaxRpm) != RQ_SUCCESS)
+  {
+    ROS_ERROR("Failed to set max RPM on Left Motor Shutting Down.");
+    ros::shutdown();
+  }
+  if (roboteq_dev_.SetConfig(kConfigMaxRpmCh, kDragoonRightMotor, kMaxRpm) != RQ_SUCCESS)
+  {
+    ROS_ERROR("Failed to set max RPM on Left Motor Shutting Down.");
+    ros::shutdown();
+  }
 
-  if (roboteq_dev_.GetConfig(kConfigMaxRpmCh, motor_max_rpm_) != RQ_SUCCESS)
+  if (roboteq_dev_.GetConfig(kConfigMaxRpmCh, kDragoonRightMotor, motor_max_rpm_) != RQ_SUCCESS)
   {
     ROS_ERROR("Failed to get max RPM from Roboteq Device. Shutting Down.");
     ros::shutdown();
   }
+  ROS_INFO("%d", motor_max_rpm_);
 }
 
 RoboteqMotorInterface::~RoboteqMotorInterface()
 {
+  this->stopMotors();
   roboteq_dev_.Disconnect();
 }
 

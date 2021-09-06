@@ -1,10 +1,10 @@
 <launch>
   <arg name="port_" default="/dev/roboteq" doc="linux device port name for roboteq controller"/>
-  <arg name="cmd_vel_timeout_limit_" default="0.2" doc="max age of cmd vel before bad health (secs)"/>
-  <arg name="timer_freq_" default="50.0" doc="freq of interface main loop (Hz)"/>
-  <arg name="wheel_base_" default="0.45" doc="Distance between robot front and back wheel (m)"/>
-  <arg name="vehicle_width_" default="0.25" doc="Distance between robot left and right wheel (m)"/>
-  <arg name="wheel_radius_" default="0.07" doc="Wheel radius (m)"/>
+  <arg name="cmd_vel_timeout_limit_" default="0.5" doc="max age of cmd vel before bad health (secs)"/>
+  <arg name="timer_freq_" default="40.0" doc="freq of interface main loop (Hz)"/>
+  <arg name="wheel_base_" default="0.29" doc="Distance between robot front and back wheel (m)"/>
+  <arg name="vehicle_width_" default="0.276" doc="Distance between robot left and right wheel (m)"/>
+  <arg name="wheel_radius_" default="0.06" doc="Wheel radius (m)"/>
   <arg name="slip_ratio_" default="0.1" doc="Slip ratio of robot (value 0 to 1)"/>
 
   <node pkg="roboteq_motor_interface" type="roboteq_motor_interface" name="roboteq_motor_interface" output="screen">
