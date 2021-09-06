@@ -17,6 +17,8 @@ RoboteqMotorInterface::RoboteqMotorInterface() : private_nh_("~")
   dragoon_kinematics_.setWheelRadius(wheel_radius_);
   dragoon_kinematics_.setSlipRatio(slip_ratio_);
 
+  ema_alpha_ = 2.0 / (1.0 + ema_num_points_);
+
   static constexpr double LARGE_DURATION = 1E5;
   time_since_cmd_vel_ = ros::Duration(LARGE_DURATION);
   last_cmd_vel_time_ = ros::Time::now();
@@ -67,8 +69,6 @@ void RoboteqMotorInterface::run()
     ROS_WARN("Failed to get motor RPM from Right Motor.");
     return false;
   }
-  
-  ROS_INFO("left enc: %d right enc: %d", enc_rpm_rel_left, enc_rpm_rel_right);
 
   SkidSteerKinematics::MotorVelocities motor_vel;
   motor_vel.left_motor_rpm = enc_rpm_rel_left * kMaxRpm / kMaxCommand;
@@ -76,11 +76,13 @@ void RoboteqMotorInterface::run()
   SkidSteerKinematics::BodyVelocities body_vel;
   body_vel = dragoon_kinematics_.calcBodyVelFromMotorVel(motor_vel);
 
+  vel_x_moving_avg_ = (ema_alpha_ * body_vel.linear_x) + (1.0 - ema_alpha_) * vel_x_moving_avg_;
+
   nav_msgs::Odometry odom_msg;
   odom_msg.header.frame_id = "odom";
   odom_msg.header.stamp = ros::Time::now();
-  odom_msg.twist.twist.linear.x = body_vel.linear_x;
-  odom_msg.twist.twist.angular.z = body_vel.angular_z;
+  odom_msg.twist.twist.linear.x = vel_x_moving_avg_;
+  odom_msg.twist.twist.angular.z = curr_imu_.angular_velocity.z;
   odom_pub_.publish(odom_msg);
   return true;
 };
@@ -90,7 +92,7 @@ void RoboteqMotorInterface::run()
   return time_since_cmd_vel_.toSec() < cmd_vel_timeout_limit_;
 }
 
-    [[nodiscard]] bool RoboteqMotorInterface::sendCmdVelToMotors()
+[[nodiscard]] bool RoboteqMotorInterface::sendCmdVelToMotors()
 {
   SkidSteerKinematics::BodyVelocities body_vel;
   body_vel.linear_x = curr_cmd_vel_.linear.x;
@@ -112,7 +114,7 @@ void RoboteqMotorInterface::run()
     return false;
   }
 
-  ROS_INFO("Roboteq Motor Interface: sending cmd to left: %d rpm, right: %d rpm", left_rpm_cmd, right_rpm_cmd);
+  ROS_DEBUG("Roboteq Motor Interface: sending cmd to left: %d rpm, right: %d rpm", left_rpm_cmd, right_rpm_cmd);
   return true;
 }
 
@@ -154,13 +156,6 @@ void RoboteqMotorInterface::initRoboteq()
     ROS_ERROR("Failed to set max RPM on Left Motor Shutting Down.");
     ros::shutdown();
   }
-
-  if (roboteq_dev_.GetConfig(kConfigMaxRpmCh, kDragoonRightMotor, motor_max_rpm_) != RQ_SUCCESS)
-  {
-    ROS_ERROR("Failed to get max RPM from Roboteq Device. Shutting Down.");
-    ros::shutdown();
-  }
-  ROS_INFO("%d", motor_max_rpm_);
 }
 
 RoboteqMotorInterface::~RoboteqMotorInterface()
@@ -178,8 +173,10 @@ void RoboteqMotorInterface::initRos()
   private_nh_.param<double>("wheel_base_", wheel_base_, 0.45);                       // m
   private_nh_.param<double>("wheel_radius_", wheel_radius_, 0.07);                   // m
   private_nh_.param<double>("vehicle_width_", vehicle_width_, 0.25);                 // m
+  private_nh_.param<int>("ema_num_points_", ema_num_points_, 10);                    // count
 
   cmd_vel_sub_ = nh_.subscribe("cmd_vel", 1, &RoboteqMotorInterface::cmdVelCallback, this);
+  imu_sub_ = nh_.subscribe("imu", 1, &RoboteqMotorInterface::imuCallback, this);
 
   odom_pub_ = nh_.advertise<nav_msgs::Odometry>("/odom", 1);
   heartbeat_pub_ = nh_.advertise<std_msgs::Empty>("/roboteq_motor_interface_heartbeat", 1);
@@ -193,6 +190,11 @@ void RoboteqMotorInterface::cmdVelCallback(const geometry_msgs::Twist& twistMsg)
   curr_cmd_vel_ = twistMsg;
   time_since_cmd_vel_ = time_now - last_cmd_vel_time_;
   last_cmd_vel_time_ = time_now;
+}
+
+void RoboteqMotorInterface::imuCallback(const sensor_msgs::Imu& imuMsg)
+{
+  curr_imu_ = imuMsg;
 }
 
 void RoboteqMotorInterface::timerCallback(const ros::TimerEvent& e)

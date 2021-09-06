@@ -6,6 +6,7 @@
   <arg name="vehicle_width_" default="0.276" doc="Distance between robot left and right wheel (m)"/>
   <arg name="wheel_radius_" default="0.06" doc="Wheel radius (m)"/>
   <arg name="slip_ratio_" default="0.1" doc="Slip ratio of robot (value 0 to 1)"/>
+  <arg name="ema_num_points_" default="15" doc="Num of data points for linear vel x moving avg filter"/>
 
   <node pkg="roboteq_motor_interface" type="roboteq_motor_interface" name="roboteq_motor_interface" output="screen">
     <param name="port_" value="$(arg port_)" type="str"/>
@@ -15,5 +16,6 @@
     <param name="vehicle_width_" value="$(arg vehicle_width_)" type="double"/>
     <param name="wheel_radius_" value="$(arg wheel_radius_)" type="double"/>
     <param name="slip_ratio_" value="$(arg slip_ratio_)" type="double"/>
+    <param name="ema_num_points_" value="$(arg ema_num_points_)" type="int"/>
   </node>
 </launch>

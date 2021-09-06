@@ -11,6 +11,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
 #include <geometry_msgs/Twist.h>
+#include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
 
 #include <string>
@@ -30,8 +31,8 @@ public:
 private:
   RoboteqDevice roboteq_dev_;
   SkidSteerKinematics dragoon_kinematics_;
-  int motor_max_rpm_;
-  int rpm_to_vel_;
+  double vel_x_moving_avg_ = 0.0;
+  sensor_msgs::Imu curr_imu_;
 
   // ROS params
   std::string port_;
@@ -41,6 +42,8 @@ private:
   double slip_ratio_;
   double wheel_radius_;
   double vehicle_width_;
+  int ema_num_points_;
+  double ema_alpha_;
 
   // Health-related: if this exceeds a threshold, this node will send stop command to motor
   ros::Duration time_since_cmd_vel_;
@@ -64,6 +67,7 @@ private:
   // ROS stuff
   ros::NodeHandle nh_, private_nh_;
   ros::Subscriber cmd_vel_sub_;
+  ros::Subscriber imu_sub_;
   ros::Publisher odom_pub_;
   ros::Publisher heartbeat_pub_;
   ros::Timer timer_;
@@ -73,6 +77,7 @@ private:
   void initRoboteq();
   void timerCallback(const ros::TimerEvent& e);
   void cmdVelCallback(const geometry_msgs::Twist& twistMsg);
+  void imuCallback(const sensor_msgs::Imu& imuMsg);
 };
 
 }  // namespace dragoon
