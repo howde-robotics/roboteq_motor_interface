@@ -69,7 +69,8 @@ CATKIN_IGNORE
 *.slo
 *.lo
 *.o
-!third_party/roboteq_api/RoboteqDevice.o
+!third_party/roboteq_api/RoboteqDeviceARM64.o
+!third_party/roboteq_api/RoboteqDeviceX86.o
 *.obj
 
 # Precompiled Headers

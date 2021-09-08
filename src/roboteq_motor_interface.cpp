@@ -120,21 +120,22 @@ void RoboteqMotorInterface::run()
 
 void RoboteqMotorInterface::stopMotors()
 {
-  ros::Duration(0.01).sleep();
+  // ros::Duration(0.01).sleep();
   if (roboteq_dev_.SetCommand(kSetRpmCh, kDragoonLeftMotor, 0) != RQ_SUCCESS)
   {
     ROS_ERROR("Failed to stop Roboteq Left Motor. Disconnecting.");
-    roboteq_dev_.Disconnect();
-    ros::shutdown();
-    return;
+    // TODO (kelvinkang): decide if we want to disconnect when failed to stop motors
+    // roboteq_dev_.Disconnect();
+    // ros::shutdown();
+    // return;
   }
-  ros::Duration(0.01).sleep();
+  // ros::Duration(0.01).sleep();
   if (roboteq_dev_.SetCommand(kSetRpmCh, kDragoonRightMotor, 0) != RQ_SUCCESS)
   {
     ROS_ERROR("Failed to stop Roboteq Right Motor. Disconnecting.");
-    roboteq_dev_.Disconnect();
-    ros::shutdown();
-    return;
+    // roboteq_dev_.Disconnect();
+    // ros::shutdown();
+    // return;
   }
 }
 
