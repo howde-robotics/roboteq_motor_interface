@@ -31,8 +31,15 @@ public:
 private:
   RoboteqDevice roboteq_dev_;
   SkidSteerKinematics dragoon_kinematics_;
+
+  // Odom related
+  ros::Duration time_since_odom_pub_;
+  ros::Time last_odom_pub_time_;
   double vel_x_moving_avg_ = 0.0;
   sensor_msgs::Imu curr_imu_;
+  double curr_yaw_ = 0;
+  double curr_x_ = 0;
+  double curr_y_ = 0;
 
   // ROS params
   std::string port_;

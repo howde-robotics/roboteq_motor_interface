@@ -2,8 +2,9 @@
 // This file is subject to the terms and conditions defined in the file 'LICENSE',
 // which is part of this source code package
 
-#include "roboteq_motor_interface.h"
+#include <tf/tf.h>
 #include <algorithm>
+#include "roboteq_motor_interface.h"
 
 namespace dragoon
 {
@@ -22,8 +23,10 @@ RoboteqMotorInterface::RoboteqMotorInterface() : private_nh_("~")
   static constexpr double LARGE_DURATION = 1E5;
   time_since_cmd_vel_ = ros::Duration(LARGE_DURATION);
   last_cmd_vel_time_ = ros::Time::now();
+  last_odom_pub_time_ = ros::Time::now();
   curr_cmd_vel_.angular.z = 0;
   curr_cmd_vel_.linear.x = 0;
+  time_since_odom_pub_.nsec = 0;
 }
 
 void RoboteqMotorInterface::run()
@@ -78,12 +81,23 @@ void RoboteqMotorInterface::run()
 
   vel_x_moving_avg_ = (ema_alpha_ * body_vel.linear_x) + (1.0 - ema_alpha_) * vel_x_moving_avg_;
 
+  time_since_odom_pub_ = ros::Time::now() - last_odom_pub_time_;
+  curr_yaw_ += curr_imu_.angular_velocity.z * time_since_odom_pub_.toSec();
+  curr_x_ += vel_x_moving_avg_ * time_since_odom_pub_.toSec() * std::cos(curr_yaw_);
+  curr_y_ += vel_x_moving_avg_ * time_since_odom_pub_.toSec() * std::sin(curr_yaw_);
+
   nav_msgs::Odometry odom_msg;
   odom_msg.header.frame_id = "odom";
   odom_msg.header.stamp = ros::Time::now();
+  odom_msg.pose.pose.position.x = curr_x_;
+  odom_msg.pose.pose.position.y = curr_y_;
+  odom_msg.pose.pose.orientation = (geometry_msgs::Quaternion)tf::createQuaternionMsgFromYaw(curr_yaw_);
   odom_msg.twist.twist.linear.x = vel_x_moving_avg_;
   odom_msg.twist.twist.angular.z = curr_imu_.angular_velocity.z;
   odom_pub_.publish(odom_msg);
+
+  last_odom_pub_time_ = ros::Time::now();
+
   return true;
 };
 
@@ -92,7 +106,7 @@ void RoboteqMotorInterface::run()
   return time_since_cmd_vel_.toSec() < cmd_vel_timeout_limit_;
 }
 
-[[nodiscard]] bool RoboteqMotorInterface::sendCmdVelToMotors()
+    [[nodiscard]] bool RoboteqMotorInterface::sendCmdVelToMotors()
 {
   SkidSteerKinematics::BodyVelocities body_vel;
   body_vel.linear_x = curr_cmd_vel_.linear.x;
@@ -146,7 +160,7 @@ void RoboteqMotorInterface::initRoboteq()
     ROS_ERROR("Failed to connect to Roboteq Device. Shutting Down.");
     ros::shutdown();
   }
-  
+
   if (roboteq_dev_.SetConfig(kConfigMaxRpmCh, kDragoonLeftMotor, kMaxRpm) != RQ_SUCCESS)
   {
     ROS_ERROR("Failed to set max RPM on Left Motor Shutting Down.");
