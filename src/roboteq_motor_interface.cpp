@@ -41,7 +41,7 @@ void RoboteqMotorInterface::run()
 
   if (!this->CheckCmdVelAge())
   {
-    ROS_WARN("Cmd Vel to Roboteq Interface is too old t=%.2fs, stopping motors", time_since_cmd_vel_.toSec());
+    ROS_DEBUG("Cmd Vel to Roboteq Interface is too old t=%.2fs, stopping motors", time_since_cmd_vel_.toSec());
     stopMotors();
     return;
   }
